@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Download, Copy, Check, QrCode, Tag } from "lucide-react";
+import { ArrowRight, Download, Copy, Check, QrCode, Tag, Mail, MessageCircleHeart } from "lucide-react";
+import  QRCode  from "qrcode";
+import { Textarea } from "./ui/textarea";
+import Loader from "./ui/loader";
+
 
 const ITEM_SUGGESTIONS = [
   "Laptop",
@@ -21,19 +25,29 @@ export function GenerateCode() {
   const [isGenerated, setIsGenerated] = useState(false);
   const [copied, setCopied] = useState(false);
   const [uniqueCode, setUniqueCode] = useState("");
+  const [qrCode, setQrCode] = useState("");
+  const [email, setEmail] = useState("");
+  const [founderMessage, setFounderMessage] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleGenerate = async () => {
     if (!itemName.trim()) return;
+    setLoading(true);
     // Generate a random unique code
-    const generateCode = fetch("/generateCode", {
+    const generateCode = fetch("/api/generateCode", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ name: itemName }),
+      body: JSON.stringify({ name: itemName , email: email, message: founderMessage }),
     });
     const response = await generateCode;
     const data = await response.json();
+    const qr = await QRCode.toDataURL(data.claimUrl,{
+      width: 512,
+      margin: 2,
+    });
+    setQrCode(qr);
     setUniqueCode(data.code);
     setIsGenerated(true);
   };
@@ -84,6 +98,28 @@ export function GenerateCode() {
                 className="h-14 pl-12 pr-4 text-lg rounded-2xl border-border bg-card shadow-sm focus:ring-2 focus:ring-primary/20"
               />
             </div>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input
+                type="email"
+                placeholder="Email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-14 pl-12 pr-4 text-lg rounded-2xl border-border bg-card shadow-sm focus:ring-2 focus:ring-primary/20"
+              />
+              <p className="text-xs mt-2 rounded-2xl text-muted-foreground">
+                Use to notify you when your item is found
+              </p>
+            </div>
+            <div className="relative">
+              <MessageCircleHeart className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Textarea
+                placeholder="message for founder"
+                value={founderMessage}
+                onChange={(e) => setFounderMessage(e.target.value)}
+                className="h-14 pl-12 pr-4 text-lg rounded-2xl placeholder:center border-border bg-card shadow-sm focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
 
             {/* Quick Suggestions */}
             <div className="flex flex-wrap gap-2 justify-center">
@@ -99,7 +135,8 @@ export function GenerateCode() {
             </div>
 
             {/* Generate Button */}
-            <Button
+            {!loading ? (
+              <Button
               onClick={handleGenerate}
               disabled={!itemName.trim()}
               className="w-full h-14 rounded-2xl text-lg font-medium gap-2 disabled:opacity-50"
@@ -107,6 +144,10 @@ export function GenerateCode() {
               Generate Code
               <ArrowRight className="w-5 h-5" />
             </Button>
+            ) : (
+              <Loader />
+            )
+            }
 
             <p className="text-center text-sm text-muted-foreground">
               No account needed. Your privacy is protected.
@@ -121,18 +162,7 @@ export function GenerateCode() {
                 {/* QR Code Placeholder */}
                 <div className="w-48 h-48 bg-foreground rounded-2xl flex items-center justify-center mb-6">
                   <div className="w-40 h-40 bg-card rounded-xl grid grid-cols-5 grid-rows-5 gap-1 p-2">
-                    {Array.from({ length: 25 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`rounded-sm ${
-                          [
-                            0, 1, 2, 4, 5, 6, 10, 12, 14, 18, 20, 22, 23, 24,
-                          ].includes(i)
-                            ? "bg-foreground"
-                            : "bg-transparent"
-                        }`}
-                      />
-                    ))}
+                    {qrCode && <img src={qrCode} alt="QR Code" />}
                   </div>
                 </div>
 
