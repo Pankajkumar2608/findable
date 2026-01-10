@@ -1,16 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
+
+import { NextResponse } from "next/server";
 import db from "@/lib/db";
 
-export async function GET(req: NextRequest) {
-  const code = req.nextUrl.searchParams.get("code");
-  const foundItem =
-    await db`SELECT name, user_message FROM items WHERE publicCode = ${code}`;
-
-  if (!foundItem || foundItem.length === 0) {
-    return NextResponse.json({ error: "Item not found" }, { status: 404 });
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  
+  const code = searchParams.get("code");
+  console.log(code)
+  if (!code) {
+    return NextResponse.json({ error: "Code is required" }, { status: 400 });
   }
-  const item = foundItem[0].name ? foundItem[0].name : "";
-  const userMessage = foundItem[0].message ? foundItem[0].message : "";
 
-  return NextResponse.json({ item: item, message: userMessage });
+  try {
+    const result = await db`
+      SELECT name, user_message 
+      FROM items 
+      WHERE publiccode = ${code} AND status = 'ACTIVE'
+    `;
+
+    if (result.length === 0) {
+      return NextResponse.json({ error: "Item not found" }, { status: 404 });
+    }
+
+    const item = result[0];
+    return NextResponse.json({ 
+      item: item.name, 
+      message: item.user_message 
+    });
+  } catch (error) {
+    console.error("Error looking up item:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

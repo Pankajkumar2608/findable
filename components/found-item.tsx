@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,8 +13,8 @@ import {
   Shield,
 } from "lucide-react";
 
-export function FoundItem() {
-  const [code, setCode] = useState("");
+export function FoundItem({ initialCode }: { initialCode?: string }) {
+  const [code, setCode] = useState(initialCode || "");
   const [isFound, setIsFound] = useState(false);
   const [message, setMessage] = useState("");
   const [location, setLocation] = useState("");
@@ -24,33 +24,44 @@ export function FoundItem() {
   const [loading, setLoading] = useState(false);
   const [founderEmail, setFounderEmail] = useState("");
 
-  const handleLookup = async() => {
+  const handleLookup = async (lookupCode = code) => {
     setLoading(true);
-    if (!code.trim()) return;
-    const foundItem = fetch(`/api/lookup?code=${code}`,
-      {
+    if (!lookupCode.trim()) return;
+    try {
+      const response = await fetch(`/api/lookup?code=${lookupCode}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-      }
-    );
-    const response = await foundItem;
-    const data = await response.json();
-    SetItem(data.item);
-    setUserMessage(data.message);
-    setIsFound(true);
-    setLoading(false);
+      });
+      if (!response.ok) throw new Error("Item not found");
+      const data = await response.json();
+      SetItem(data.item);
+      setUserMessage(data.message);
+      setIsFound(true);
+      // If we looked up successfully, update the code state if it differs (e.g. from prop)
+      if (lookupCode !== code) setCode(lookupCode);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  useEffect(() => {
+    if (initialCode) {
+      handleLookup(initialCode);
+    }
+  }, [initialCode]);
+
   const handleSendMessage = () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !founderEmail.trim()) return;
     const sendMessage = fetch("/api/sendMessage", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ code, message, location }),
+      body: JSON.stringify({ code, message, location, finderEmail: founderEmail }),
     });
     sendMessage.then(() => {
       setIsSent(true);
@@ -78,15 +89,15 @@ export function FoundItem() {
             {isSent
               ? "Message sent!"
               : isFound
-              ? "Item found"
-              : "Found something?"}
+                ? "Item found"
+                : "Found something?"}
           </h1>
           <p className="text-muted-foreground text-lg">
             {isSent
               ? "The owner has been notified. You're a hero!"
               : isFound
-              ? "Great! Let the owner know you found their item."
-              : "Enter the code on the item to notify the owner."}
+                ? "Great! Let the owner know you found their item."
+                : "Enter the code on the item to notify the owner."}
           </p>
         </div>
 
@@ -108,7 +119,7 @@ export function FoundItem() {
             {/* Lookup Button */}
             {!loading ? (
               <Button
-                onClick={handleLookup}
+                onClick={() => handleLookup()}
                 disabled={!code.trim()}
                 className="w-full h-14 rounded-2xl text-lg font-medium gap-2 disabled:opacity-50"
               >
@@ -209,12 +220,28 @@ export function FoundItem() {
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Your Email{" "}
+                  <span className="text-muted-foreground font-normal">
+                    (for owner to reply)
+                  </span>
+                </label>
+                <Input
+                  type="email"
+                  placeholder="you@example.com"
+                  value={founderEmail}
+                  onChange={(e) => setFounderEmail(e.target.value)}
+                  className="h-12 px-4 rounded-2xl border-border bg-card focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
             </div>
 
             {/* Send Button */}
             <Button
               onClick={handleSendMessage}
-              disabled={!message.trim()}
+              disabled={!message.trim() || !founderEmail.trim()}
               className="w-full h-14 rounded-2xl text-lg font-medium gap-2 disabled:opacity-50"
             >
               <MessageSquare className="w-5 h-5" />
