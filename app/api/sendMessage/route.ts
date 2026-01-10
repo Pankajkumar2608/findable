@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     // Send email to owner
     // In prod, use real domain. Locally, maybe just log or use what we have.
-    const replyLink = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reply/${item.id}`;
+    const replyLink = `${process.env.NEXT_PUBLIC_APP_URL || 'https://findable.itzpankaj.site'}/reply/${item.id}`;
     
     const sendedMail = await sendFoundEmail(
       item.email,
