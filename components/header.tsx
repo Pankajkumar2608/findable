@@ -20,7 +20,7 @@ export function Header() {
             </Link>
           </Button>
           <Button asChild className="rounded-full px-6">
-            <Link href="/generate">Get a Code</Link>
+            <Link href="/getCode">Get a Code</Link>
           </Button>
         </div>
       </div>

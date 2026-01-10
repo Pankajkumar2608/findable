@@ -29,7 +29,7 @@ export function HeroSection() {
             size="lg"
             className="h-14 px-8 text-base rounded-full gap-2"
           >
-            <Link href="/generate">
+            <Link href="/getCode">
               Get a Code
               <ArrowRight className="h-4 w-4" />
             </Link>
