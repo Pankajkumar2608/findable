@@ -12,7 +12,7 @@ export const sendFoundEmail = async (
 ) => {
   try {
     await resend.emails.send({
-      from: 'Findable <noreply@findable.app>', // Update this with a valid sender if available, or use a testing domain
+      from: 'Findable <noreply@findable.itzpankaj.site>', // Update this with a valid sender if available, or use a testing domain
       to: ownerEmail,
       subject: `Your ${itemName} has been found!`,
       html: `
@@ -41,7 +41,7 @@ export const sendReplyEmail = async (
 ) => {
   try {
     await resend.emails.send({
-      from: 'Findable <noreply@findable.app>',
+      from: "Findable <noreply@findable.itzpankaj.site>",
       to: finderEmail,
       subject: `Reply from owner of ${itemName}`,
       html: `
@@ -52,7 +52,7 @@ export const sendReplyEmail = async (
         </blockquote>
         <p>You can reply to this email thread to continue the conversation (if facilitated via email reply-to) or wait for further instructions.</p> 
         <p><small>Note: This system currently supports one-way web replies from owner. Finder receives this via email.</small></p>
-      `
+      `,
     });
     return { success: true };
   } catch (error) {
