@@ -33,23 +33,27 @@ export function GenerateCode() {
   const handleGenerate = async () => {
     if (!itemName.trim()) return;
     setLoading(true);
-    // Generate a random unique code
-    const generateCode = fetch("/api/generateCode", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name: itemName , email: email, message: founderMessage }),
-    });
-    const response = await generateCode;
-    const data = await response.json();
-    const qr = await QRCode.toDataURL(data.claimUrl,{
-      width: 512,
-      margin: 2,
-    });
-    setQrCode(qr);
-    setUniqueCode(data.code);
-    setIsGenerated(true);
+    try {
+      // Generate a random unique code
+      const generateCode = fetch("/api/generateCode", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: itemName , email: email, message: founderMessage }),
+      });
+      const response = await generateCode;
+      const data = await response.json();
+      const qr = await QRCode.toDataURL(data.claimUrl,{
+        width: 512,
+        margin: 2,
+      });
+      setQrCode(qr);
+      setUniqueCode(data.code);
+      setIsGenerated(true);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCopy = () => {
@@ -62,6 +66,81 @@ export function GenerateCode() {
     setItemName("");
     setIsGenerated(false);
     setUniqueCode("");
+  };
+
+  const handleDownload = () => {
+    // Create a canvas to combine QR code with text
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    // Set canvas size (QR + padding + text area)
+    canvas.width = 600;
+    canvas.height = 750;
+
+    if (ctx) {
+      // White background
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw QR code
+      const qrImage = new Image();
+      qrImage.onload = () => {
+        // Center the QR code
+        const qrSize = 500;
+        const qrX = (canvas.width - qrSize) / 2;
+        const qrY = 40;
+        ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
+
+        // Add border around QR
+        ctx.strokeStyle = "#e5e7eb";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(qrX, qrY, qrSize, qrSize);
+
+        // Add text below QR code
+        ctx.fillStyle = "#000000";
+        ctx.textAlign = "center";
+
+        // Main message
+        ctx.font = "bold 24px Arial";
+        ctx.fillText("FOUND THIS ITEM?", canvas.width / 2, 580);
+
+        // Instructions
+        ctx.font = "18px Arial";
+        ctx.fillText("Scan this QR code or visit:", canvas.width / 2, 615);
+
+        // URL
+        ctx.font = "bold 16px monospace";
+        ctx.fillText(
+          `findable.itzpankaj.site/found/${uniqueCode}`,
+          canvas.width / 2,
+          645
+        );
+
+        // Code
+        ctx.font = "14px Arial";
+        ctx.fillStyle = "#6b7280";
+        ctx.fillText(`Code: ${uniqueCode}`, canvas.width / 2, 675);
+
+        // Item name
+        ctx.font = "italic 16px Arial";
+        ctx.fillText(`Item: ${itemName}`, canvas.width / 2, 705);
+
+        // Download the canvas as PNG
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.download = `findable-${itemName
+              .toLowerCase()
+              .replace(/\s+/g, "-")}-${uniqueCode}.png`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+          }
+        });
+      };
+      qrImage.src = qrCode;
+    }
   };
 
   return (
@@ -208,7 +287,7 @@ export function GenerateCode() {
                   </>
                 )}
               </Button>
-              <Button className="h-14 rounded-2xl gap-2 text-base">
+              <Button onClick={handleDownload} className="h-14 rounded-2xl gap-2 text-base">
                 <Download className="w-5 h-5" />
                 Download
               </Button>
