@@ -53,7 +53,7 @@ export function GenerateCode() {
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(`https://findable.app/found/${uniqueCode}`);
+    navigator.clipboard.writeText(`https://findable.itzpankaj.site/found/${uniqueCode}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -137,17 +137,16 @@ export function GenerateCode() {
             {/* Generate Button */}
             {!loading ? (
               <Button
-              onClick={handleGenerate}
-              disabled={!itemName.trim()}
-              className="w-full h-14 rounded-2xl text-lg font-medium gap-2 disabled:opacity-50"
-            >
-              Generate Code
-              <ArrowRight className="w-5 h-5" />
-            </Button>
+                onClick={handleGenerate}
+                disabled={!itemName.trim()}
+                className="w-full h-14 rounded-2xl text-lg font-medium gap-2 disabled:opacity-50"
+              >
+                Generate Code
+                <ArrowRight className="w-5 h-5" />
+              </Button>
             ) : (
               <Loader />
-            )
-            }
+            )}
 
             <p className="text-center text-sm text-muted-foreground">
               No account needed. Your privacy is protected.
@@ -161,8 +160,14 @@ export function GenerateCode() {
               <div className="flex flex-col items-center">
                 {/* QR Code Placeholder */}
                 <div className="w-48 h-48 bg-foreground rounded-2xl flex items-center justify-center mb-6">
-                  <div className="w-40 h-40 bg-card rounded-xl grid grid-cols-5 grid-rows-5 gap-1 p-2">
-                    {qrCode && <img src={qrCode} alt="QR Code" />}
+                  <div className="w-40 h-40 bg-card rounded-xl p-2">
+                    {qrCode && (
+                      <img
+                        src={qrCode}
+                        alt="QR Code"
+                        className="w-full h-full"
+                      />
+                    )}
                   </div>
                 </div>
 
